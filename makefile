@@ -1,15 +1,13 @@
 CC=gcc
-CCFLAGS=-std=c99 -Wall -pedantic
-CLFLAGS=
-cgt: hmap.o cgt.o
-	$(CC) $(CLFLAGS) $^ -o cgt
+CCFLAGS=-std=c99 -march=native -mtune=native -Os -Wall -Wextra -pedantic
+CLD=
 
-cgt.o: cgt.c common.h
-	$(CC) $(CCFLAGS) $< -c
+
+all: hmap.o
 
 hmap.o: hmap.c hmap.h common.h
 	$(CC) $(CCFLAGS) $< -c
 
-	#Removes all tildes ending files, objects codes and test executable
+#Removes all tildes ending files, objects codes and test executable
 clean:
-	rm -rf *~ *.o .*.swp  test
+	rm -rf *~ *.o .*.swp utest gmon.out 
