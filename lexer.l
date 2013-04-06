@@ -54,7 +54,8 @@ alphanum [a-zA-Z_0-9]
 {digit}+ {}
 {digit}+\.{digit} {}
 
-
+"{"[a-zA-Z0-9\n ]*"}"
+"{"[^}\n]*"}"
 
 
 %%
