@@ -1,5 +1,5 @@
 CC=gcc
-CCFLAGS=-std=c99 -march=native -mtune=native -Os -Wall -Wextra -pedantic
+CCFLAGS=-std=c99 -Os -Wall -Wextra -pedantic
 CLFLAGS=
 
 all: hmap.o lexer.o cgt.o

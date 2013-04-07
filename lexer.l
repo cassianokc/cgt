@@ -1,7 +1,7 @@
 /*Definitions*/
 
 %{
-extern unsigned int nroLinha;
+
 %}
 letter [a-zA-Z]
 digit [0-9]
@@ -24,7 +24,7 @@ alphanum[a-zA-Z_0-9]
 
 .	{
 				char __linha[60];
-				sprintf(__linha, "Caracter desconhecido na linha %d\n", nroLinha + 1);
+				sprintf(__linha, "Caracter desconhecido na linha\n");
 				fputs(__linha, stdout);
 	}
 
