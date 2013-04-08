@@ -28,6 +28,10 @@ alphanum[a-zA-Z_0-9]
 	/* Ignore new line */
 }
 
+"{".*"}" { 
+	/* Ignore comments. */
+} 
+
 "begin" {
 	printf("%s - KEYWORD_BEGIN\n", yytext);	
 }
