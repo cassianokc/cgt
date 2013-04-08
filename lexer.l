@@ -145,27 +145,27 @@ alphanum[a-zA-Z_0-9]
 }
 
 ";" {
-	printf("%s - PONCTUATOR_SEMICOLON\n", yytext);
+	printf("%s - PUNCTUATION_SEMICOLON\n", yytext);
 }
 
 "," {
-	printf("%s - PONCTUATOR_COMMA\n", yytext);
+	printf("%s - PUNCTUATION_COMMA\n", yytext);
 }
 
 "." {
-	printf("%s - PONCTUATOR_PERIOD\n", yytext);
+	printf("%s - PUNCTUATION_PERIOD\n", yytext);
 }
 
 "(" {
-	printf("%s - PONCTUATOR_LPAREN\n", yytext);
+	printf("%s - PUNCTUATION_LPAREN\n", yytext);
 }
 
 ")" {
-	printf("%s - PONCTUATOR_RPAREN\n", yytext);
+	printf("%s - PUNCTUATION_RPAREN\n", yytext);
 }
 
 ":" {
-	printf("%s - PONCTUATOR_DDOTS\n", yytext);
+	printf("%s - PUNCTUATION_DDOTS\n", yytext);
 }
 
 {letter}{alphanum}* {
