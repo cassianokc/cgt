@@ -10,10 +10,10 @@ char empty_block[ID_SIZE];
 
 unsigned long hash(const void *a)
 {
-	unsigned char *str = a;
+	const unsigned char *str = a;
 	unsigned long hash = 5381;
 	int c;
-	while (c = *str++)
+	while ((c = *str++))
 		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 	return (hash)%MAP_SIZE;
 }
@@ -29,7 +29,6 @@ int main(int argc, char **argv)
 		printf("TODO: use %s file\n", argv[1]);
 	}
 	yylex();
-	hmap_print(map);
 	hmap_free(map);
 	return SUCCESS;
 }

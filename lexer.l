@@ -1,7 +1,14 @@
 /*Definitions*/
 %top{
-#include <stdio.h>
+#ifndef CGT_H
+unsigned current_line=1;
+#endif
+#include "extern.h"
+#include "hmap.h"
 }
+
+%option noyywrap
+
 
 letter [a-zA-Z]
 digit [0-9]
@@ -10,6 +17,15 @@ alphanum[a-zA-Z_0-9]
 
 " " { 
 	/* Ignore space */
+}
+
+"\t" {
+	/* Ignore tab */
+}
+
+"\n" {
+	current_line++;
+	/* Ignore new line */
 }
 
 "begin" {
@@ -124,10 +140,6 @@ alphanum[a-zA-Z_0-9]
 	printf("%s - OPERATOR_GEQUAL\n", yytext);
 }
 
-"<=" {
-	printf("%s - OPERATOR_LEQUAL\n", yytext);
-}
-
 ";" {
 	printf("%s - PONCTUATOR_SEMICOLON\n", yytext);
 }
@@ -146,6 +158,8 @@ alphanum[a-zA-Z_0-9]
 
 {letter}{alphanum}* {
 	printf("%s - IDENTIFIER\n", yytext);
+	if (hmap_search(map, yytext, &empty_block) == FAILURE)
+		hmap_insert(map, yytext, &empty_block);
 }
 
 {digit}+ {
@@ -157,7 +171,7 @@ alphanum[a-zA-Z_0-9]
 }
 
 . {
-	printf("Invalid char\n");
+	printf("Invalid char at line %u\n", current_line);
 }
 %%
 /*C Code*/
