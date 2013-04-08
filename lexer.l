@@ -148,6 +148,10 @@ alphanum[a-zA-Z_0-9]
 	printf("%s - PONCTUATOR_SEMICOLON\n", yytext);
 }
 
+"," {
+	printf("%s - PONCTUATOR_COMMA\n", yytext);
+}
+
 "." {
 	printf("%s - PONCTUATOR_PERIOD\n", yytext);
 }
@@ -158,6 +162,10 @@ alphanum[a-zA-Z_0-9]
 
 ")" {
 	printf("%s - PONCTUATOR_RPAREN\n", yytext);
+}
+
+":" {
+	printf("%s - PONCTUATOR_DDOTS\n", yytext);
 }
 
 {letter}{alphanum}* {
