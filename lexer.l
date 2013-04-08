@@ -1,7 +1,7 @@
 /*Definitions*/
 %top{
 #ifndef CGT_H
-unsigned current_line=1;
+	unsigned current_line=1;
 #endif
 #include "extern.h"
 #include "hmap.h"
@@ -169,13 +169,27 @@ alphanum[a-zA-Z_0-9]
 }
 
 {letter}{alphanum}* {
-	printf("%s - IDENTIFIER\n", yytext);
-	if (hmap_search(map, yytext, &empty_block) == FAILURE)
-		hmap_insert(map, yytext, &empty_block);
+	if (yyleng > ID_SIZE)
+	{
+		printf("Error at %u: Identifier is too large.\n", current_line);
+	}
+	else
+	{	
+		printf("%s - IDENTIFIER\n", yytext);
+		if (hmap_search(map, yytext, &empty_block) == FAILURE)
+			hmap_insert(map, yytext, &empty_block);
+	}
 }
 
 {digit}+ {
-	printf("%s - CONSTANT_INTEGER\n", yytext);
+	if (yyleng > 10)	
+	{
+		printf("Error at %u: Digit is too large.\n", current_line);
+	}
+	else
+	{
+		printf("%s - CONSTANT_INTEGER\n", yytext);
+	}
 }
 
 {digit}+\.{digit}+ {
@@ -183,7 +197,7 @@ alphanum[a-zA-Z_0-9]
 }
 
 . {
-	printf("Invalid char at line %u\n", current_line);
+	printf("Error at %u: Invalid char.\n", current_line);
 }
 %%
 /*C Code*/
