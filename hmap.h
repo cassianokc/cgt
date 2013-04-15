@@ -8,7 +8,7 @@
 
 
 /*
-*	@section Description A generic hash map data structure implementation,
+*		@section Description A generic hash map data structure implementation,
 * using a probing collision solving. The hash map stores data with 
 * data_size bytes each identified by a key with key_size bytes and can 
 * store up to map_size blocks.
@@ -32,6 +32,7 @@ struct hmap
 bool is_empty(void *, unsigned long);
 bool is_deleted(void *, unsigned long);
 bool is_reserved(void *, unsigned long);
+
 /*
 * 	Inits the a hash map structure and returns a pointer to it.
 * 	@param map_size Size of the hash map.
@@ -42,25 +43,25 @@ bool is_reserved(void *, unsigned long);
 * 	@return Returns a pointer to the created hmap structure. If there isn't
 * enough memory, returns a NULL pointer. 
 */
-
 struct hmap *hmap_init(unsigned long map_size, unsigned long key_size, 
 	unsigned long data_size, unsigned long (*hash)(const void *)); 
+
 /*
 *	Frees all memory used by the hmap structure.
 * 	@param map hmap structure that will be freed.
 */
-
 void hmap_free(struct hmap *map);
+
 /*
 * 	Inserts a new data identified by a key on a given hmap structure.
-*	@param map Pointer to a hmap structure where data is going to be added.
+*		@param map Pointer to a hmap structure where data is going to be added.
 * 	@param key Pointer to the key which identifies the data.
 * 	@param data Pointer to the data that will be added on hmap.
 * 	@return Return SUCCESS if the insertion was successfull, if there 
 * wasn't space on the map returns FAILURE.
 */
-
 int hmap_insert(struct hmap *map, void *key, void *data);
+
 /*
 * 	Removes a data identified by key on a given hmap strucuture.
 * 	@param map Pointer to a hmap structure from where the data is going to
@@ -71,8 +72,8 @@ int hmap_insert(struct hmap *map, void *key, void *data);
 * 	@return Returns SUCCESS if the data was found and the removal was 
 * successfull and FAILURE otherwise.
 */
-
 int hmap_remove(struct hmap *map, void *key, void *data);
+
 /*
 * 	Searches a data identified by key on a given hmap strucuture.
 * 	@param map Pointer to a hmap structure from where the data is going
@@ -83,7 +84,7 @@ int hmap_remove(struct hmap *map, void *key, void *data);
 int hmap_search(struct hmap *map, void *key, void *data);
 
 /*
-*	Prints all data in the hmap structure for debugging.
+*		Prints all data in the hmap structure for debugging.
 * 	@param map Pointer to the hmap structure that will be printed.
 */
 void hmap_print(struct hmap *map);
