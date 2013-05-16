@@ -40,8 +40,8 @@ bool is_reserved(void *data, unsigned long size)
 	return TRUE;
 }
 
-struct hmap *hmap_init(unsigned long map_size, unsigned long data_size,
-		unsigned long key_size, unsigned long (*hash)(const void *))
+struct hmap *hmap_init(unsigned long map_size, unsigned long key_size,
+		unsigned long data_size, unsigned long (*hash)(const void *))
 {
 	struct hmap *map;
 	map = malloc(sizeof(struct hmap));
@@ -60,7 +60,7 @@ struct hmap *hmap_init(unsigned long map_size, unsigned long data_size,
 		free(map);
 		return NULL;
 	}
-  memset(map->keys, HMAP_EMPTY_BLOCK, map_size*key_size);
+ 	memset(map->keys, HMAP_EMPTY_BLOCK, map_size*key_size);
 	map->map_size = map_size;
 	map->key_size = key_size;
 	map->data_size = data_size;
