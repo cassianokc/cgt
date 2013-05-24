@@ -78,7 +78,7 @@ void hmap_free(struct hmap *map)
 int hmap_insert(struct hmap *map, void *key, void *data)
 {
 	unsigned long i=0, index=map->hash(key);
-	unsigned char *aux_key=map->keys, *aux_data=map->data;
+	char *aux_key=map->keys, *aux_data=map->data;
 	if (is_reserved(key, map->key_size))/*Makes sure to dont add reserved keys*/
         return FAILURE;
 	while (!is_reserved(aux_key+((index+i)%map->map_size)*(map->key_size),
@@ -89,9 +89,9 @@ int hmap_insert(struct hmap *map, void *key, void *data)
 			return FAILURE;
 		i++;
 	}
-	memcpy(aux_key+((index+i)%map->map_size)*(map->key_size), key,
+	strncpy(aux_key+((index+i)%map->map_size)*(map->key_size), key,
 			map->key_size); /*Write key and data*/
-	memcpy(aux_data+((index+i)%map->map_size)*(map->data_size), data,
+	strncpy(aux_data+((index+i)%map->map_size)*(map->data_size), data,
 			 map->data_size);
 	return SUCCESS;
 }
@@ -99,14 +99,14 @@ int hmap_insert(struct hmap *map, void *key, void *data)
 int hmap_remove(struct hmap *map, void *key, void *data)
 {
 	unsigned long i=0, index=map->hash(key);
-	unsigned char *aux_key=map->keys, *aux_data=map->data;
+	char *aux_key=map->keys, *aux_data=map->data;
 	while (!is_empty(aux_key+((index+i)%map->map_size)*(map->key_size),
 				map->key_size)&&i!=map->map_size)
 	{
-		if (memcmp(aux_key+((index+i)%map->map_size)*(map->key_size), key,
+		if (strncmp(aux_key+((index+i)%map->map_size)*(map->key_size), key,
 					map->key_size) == 0)
 		{
-			memcpy(data, aux_data+((index+i)%map->map_size)*(map->data_size),
+			strncpy(data, aux_data+((index+i)%map->map_size)*(map->data_size),
 					map->data_size);
 			memset(aux_key+((index+i)%map->map_size)*(map->key_size), 0xff,
 					map->key_size);
@@ -124,10 +124,10 @@ int hmap_search(struct hmap *map, void *key, void *data)
 	while (!is_empty(aux_key+((index+i)%map->map_size)*(map->key_size),
 				map->key_size)&&i!=map->map_size)
 	{
-		if (memcmp(aux_key+((index+i)%map->map_size)*(map->key_size), key,
+		if (strncmp(aux_key+((index+i)%map->map_size)*(map->key_size), key,
 					map->key_size) == 0)
 		{
-			memcpy(data, aux_data+((index+i)%map->map_size)*(map->data_size),
+			strncpy(data, aux_data+((index+i)%map->map_size)*(map->data_size),
 					map->data_size);
 			return SUCCESS;
 		}

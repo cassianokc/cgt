@@ -50,13 +50,21 @@ char val_string[ID_SIZE];
 %token PUNCTUATOR_LPAREN
 %token PUNCTUATOR_RPAREN
 %token PUNCTUATOR_DDOTS
-%start s
+%start program 
 %%
 
 
-s:VAL_STRING {
+programa:KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo ;
+corpo: dc KEYWORD_BEGIN comandos KEYWORD_END ;
+dc: dc_c dc_v dc_p ;
+dc_c: KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero | ;
+dc_v: KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON
+	dc_v | ;
+tipo_var: KEYWORD_REAL | KEYWORD_INTEGER ;
+variaveis: VAL_STRING mais_var ;
+mais_var: PUNCTUATOR_COMMA variaveis | 
 
-}
+	
 
 
 %%

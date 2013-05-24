@@ -38,6 +38,11 @@ alphanum [a-zA-Z_0-9]
 	}
 	else
 	{	
+		int ret_val;
+		if (hmap_search(wk_table, yytext, &ret_val) == SUCCESS)
+		{
+			return ret_val;
+		}
 		strcpy(yylval.val_string, yytext);		
 		return VAL_STRING; 
 	}
