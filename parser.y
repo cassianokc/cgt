@@ -82,7 +82,28 @@ cmd : KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_LPAREN |
 	KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa |
 	VAL_STRING PUNCTUATOR_DDOTS OPERATOR_EQUAL expressao|
 	VAL_STRING lista_arg |
-	KEYWORD_BEGIN comandos KEYWORD_END ;
+	KEYWORD_BEGIN comandos KEYWORD_END |
+	KEYWORD_REPEAT comandos KEYWORD_UNTIL condicao |
+	KEYWORD_FOR VAL_STRING PUNCTUATOR_DDOTS OPERATOR_EQUAL expressao expressao KEYWORD_DO cmd ;
+	condicao : expressao relacao expressao
+relacao : OPERATOR_EQUAL |
+	OPERATOR_NEQUAL |
+	OPERATOR_GEQUAL |
+	OPERATOR_LEQUAL |
+	OPERATOR_LESSER |
+	OPERATOR_GREATER ;
+expressao : termo outros_termos
+op_un : OPERATOR_PLUS | OPERATOR_MINUS |
+outros_termos : op_ad termo outros_termos |
+op_ad : OPERATOR_PLUS | OPERATOR_MINUS ;
+termo : op_un fator mais_fatores ;
+mais_fatores : op_mul fator mais_fatores |
+op_mul : OPERATOR_MUL | OPERATOR_DIV ;
+fator : VAL_STRING | numero | PUNCTUATOR_LPAREN expressao PUNCTUATOR_LPAREN ;
+numero : VAL_INTEGER | VAL_FLOAT ;
+caracter : c
+
+
 	
 
 
