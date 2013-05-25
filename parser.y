@@ -16,6 +16,8 @@ char val_string[ID_SIZE];
 %token<val_integer> VAL_INTEGER
 %token<val_float> VAL_FLOAT
 %token<val_string> VAL_STRING
+%token KEYWORD_READ
+%token KEYWORD_WRITE
 %token KEYWORD_BEGIN 
 %token KEYWORD_END
 %token KEYWORD_CONST
@@ -48,7 +50,7 @@ char val_string[ID_SIZE];
 %token PUNCTUATOR_COMMA
 %token PUNCTUATOR_PERIOD
 %token PUNCTUATOR_LPAREN
-%token PUNCTUATOR_RPAREN
+%token PUNCTUATOR_LPAREN
 %token PUNCTUATOR_DDOTS
 %start program 
 %%
@@ -63,6 +65,26 @@ dc_v: KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON
 tipo_var: KEYWORD_REAL | KEYWORD_INTEGER ;
 variaveis: VAL_STRING mais_var ;
 mais_var: PUNCTUATOR_COMMA variaveis | 
+dc_p : KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p  dc_p ;
+dc_loc : dc_v ;
+corpo_p : dc_loc KEYWORD_BEGIN comandos KEYWORD_END PUNCTUATOR_SEMICOLON ;
+lista_arg : PUNCTUATOR_LPAREN argumentos PUNCTUATOR_RPAREN | 
+mais_par : PUNCTUATOR_SEMICOLON lista_par |
+lista_par : variaveis PUNCTUATOR_DDOTS tipo_var mais_par ;
+parametros : PUNCTUATOR_LPAREN lista_par PUNCTUATOR_RPAREN | 
+argumentos : VAL_STRING mais_ident ;
+mais_ident : PUNCTUATOR_SEMICOLON argumentos |
+p_falsa : KEYWORD_ELSE cmd |
+comandos : cmd PUNCTUATOR_SEMICOLON comandos | 
+cmd : KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_LPAREN | 
+	KEYWORD_WRITE PUNCTUATOR_LPAREN variaveis PUNCTUATOR_LPAREN | 
+	KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_LPAREN KEYWORD_DO cmd | 
+	KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa |
+	VAL_STRING PUNCTUATOR_DDOTS OPERATOR_EQUAL expressao|
+	VAL_STRING lista_arg |
+	KEYWORD_BEGIN comandos KEYWORD_END ;
+	
+
 
 	
 
