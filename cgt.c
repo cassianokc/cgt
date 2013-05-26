@@ -39,7 +39,7 @@ void init_wk_table(struct hmap *map)
 	int value;
 	value=KEYWORD_READ;
 	hmap_insert(map, key, &value);
-    value=KEYWORD_WRITE;
+    	value=KEYWORD_WRITE;
 	hmap_insert(map, key, &value);
 	value=KEYWORD_BEGIN;
 	hmap_insert(map, key, &value);	

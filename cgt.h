@@ -13,6 +13,6 @@ struct symbol
 };
 
 unsigned long hash(const void *a);
-void init_symbol_table(struct hmap *map);
+void init_wk_table(struct hmap *map);
 
 #endif

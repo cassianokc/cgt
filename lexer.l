@@ -43,8 +43,11 @@ alphanum [a-zA-Z_0-9]
 		{
 			return ret_val;
 		}
+		else
+		{
 		strcpy(yylval.val_string, yytext);		
 		return VAL_STRING; 
+		}
 	}
 }
 

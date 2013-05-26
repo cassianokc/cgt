@@ -50,9 +50,9 @@ char val_string[ID_SIZE];
 %token PUNCTUATOR_COMMA
 %token PUNCTUATOR_PERIOD
 %token PUNCTUATOR_LPAREN
-%token PUNCTUATOR_LPAREN
+%token PUNCTUATOR_RPAREN
 %token PUNCTUATOR_DDOTS
-%start program 
+%start programa
 %%
 
 
@@ -101,7 +101,7 @@ mais_fatores : op_mul fator mais_fatores |
 op_mul : OPERATOR_MUL | OPERATOR_DIV ;
 fator : VAL_STRING | numero | PUNCTUATOR_LPAREN expressao PUNCTUATOR_LPAREN ;
 numero : VAL_INTEGER | VAL_FLOAT ;
-caracter : c
+caracter : VAL_STRING 
 
 
 	
