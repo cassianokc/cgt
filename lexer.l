@@ -11,6 +11,7 @@ extern YYSTYPE yylval;
 letter [a-zA-Z]
 digit [0-9]
 alphanum [a-zA-Z_0-9]
+opchar [*()/+=:<>,.:;]
 
 %%
 
@@ -24,6 +25,7 @@ alphanum [a-zA-Z_0-9]
 
 "\n" {
 	current_line++;
+	printf("Nova linha\n");
 	/* Ignore new line */
 }
 
@@ -31,16 +33,31 @@ alphanum [a-zA-Z_0-9]
 	/* Ignore comments. */
 } 
 
+{opchar}+ {
+	int ret_val;
+		if (hmap_search(wk_table, yytext, &ret_val) == SUCCESS)
+		{
+			printf("Returning:%d\n", ret_val);
+			fflush(stdout);
+			return ret_val;
+		}
+	else
+		printf("Error at %u: Operator %s is unrecognized.\n", current_line, yytext);
+}
+
 {letter}{alphanum}* {
 	if (yyleng > ID_SIZE)
 	{
 		printf("Error at %u: Identifier %s is too large.\n", current_line, yytext);
+			fflush(stdout);
 	}
 	else
 	{	
 		int ret_val;
 		if (hmap_search(wk_table, yytext, &ret_val) == SUCCESS)
 		{
+			printf("Returning:%d\n", ret_val);
+			fflush(stdout);
 			return ret_val;
 		}
 		else
