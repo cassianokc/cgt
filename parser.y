@@ -52,6 +52,7 @@ char val_string[ID_SIZE];
 %token PUNCTUATOR_LPAREN
 %token PUNCTUATOR_RPAREN
 %token PUNCTUATOR_DDOTS
+%token LEX_ERROR
 %start programa
 %%
 
