@@ -65,7 +65,7 @@ dc_v: KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON
 tipo_var: KEYWORD_REAL | KEYWORD_INTEGER ;
 variaveis: VAL_STRING mais_var ;
 mais_var: PUNCTUATOR_COMMA variaveis | 
-dc_p : KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p  dc_p ;
+dc_p : KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p  dc_p |
 dc_loc : dc_v ;
 corpo_p : dc_loc KEYWORD_BEGIN comandos KEYWORD_END PUNCTUATOR_SEMICOLON ;
 lista_arg : PUNCTUATOR_LPAREN argumentos PUNCTUATOR_RPAREN | 
