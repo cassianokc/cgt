@@ -93,11 +93,11 @@ cmd : KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN |
 	KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN 
 	KEYWORD_DO cmd | 
 	KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa |
-	VAL_STRING PUNCTUATOR_DDOTS OPERATOR_EQUAL expressao|
+	VAL_STRING OPERATOR_ATRIB expressao|
 	VAL_STRING lista_arg |
 	KEYWORD_BEGIN comandos KEYWORD_END |
 	KEYWORD_REPEAT comandos KEYWORD_UNTIL condicao |
-	KEYWORD_FOR VAL_STRING PUNCTUATOR_DDOTS OPERATOR_EQUAL expressao expressao KEYWORD_DO cmd ;
+	KEYWORD_FOR VAL_STRING OPERATOR_ATRIB expressao KEYWORD_TO expressao KEYWORD_DO cmd ;
 condicao : expressao relacao expressao
 relacao : OPERATOR_EQUAL |
 	OPERATOR_NEQUAL |
@@ -125,6 +125,6 @@ caracter : VAL_STRING
 
 int yyerror(char *s)
 {
-	printf("ERRO\n");
+	printf("ERRO %s\n", s);
 	return 1;
 }

@@ -4,14 +4,13 @@
 #include "cgt.h"
 #include "extern.h"
 #include "parser.tab.h"
-	extern YYSTYPE yylval;
+extern YYSTYPE yylval;
 }
 
 %option noyywrap
 letter [a-zA-Z]
 digit [0-9]
 alphanum [a-zA-Z_0-9]
-opchar [*()/+=:<>,.:;]
 
 %%
 
@@ -32,18 +31,73 @@ opchar [*()/+=:<>,.:;]
 	/* Ignore comments. */
 } 
 
-{opchar}+ {
-	int ret_val;
-	if (hmap_search(wk_table, yytext, &ret_val) == SUCCESS)
-	{
-		printf("Returning:%d\n", ret_val);
-		fflush(stdout);
-		return ret_val;
-	}
-	else
-		printf("Lexical error at %u: Operator %s is unrecognized.\n", current_line, yytext);
-	return LEX_ERROR;
-	  }
+"+" {
+	return OPERATOR_PLUS;
+}
+
+"-" {
+	return OPERATOR_MINUS;
+}
+
+"*" {
+	return OPERATOR_MUL;
+}
+
+"/" {
+	return OPERATOR_DIV;
+}
+
+":=" {
+	return OPERATOR_ATRIB;
+}
+
+"=" {
+	return OPERATOR_EQUAL;
+}
+
+"<>" {
+	return OPERATOR_NEQUAL;
+}
+
+"<" {
+	return OPERATOR_LESSER;
+} 
+
+">" {
+	return OPERATOR_GREATER;
+}
+
+"<=" {
+	return OPERATOR_LEQUAL;
+}
+
+">=" {
+	return OPERATOR_GEQUAL;
+}
+
+";" {
+	return PUNCTUATOR_SEMICOLON;
+}
+
+"," {
+	return PUNCTUATOR_COMMA;
+}
+
+"." {
+	return PUNCTUATOR_PERIOD;
+}
+
+"(" {
+	return PUNCTUATOR_LPAREN;
+}
+
+")" {
+	return PUNCTUATOR_RPAREN;
+}
+
+":" {
+	return PUNCTUATOR_DDOTS;
+}
 
 {letter}{alphanum}* {
 	if (yyleng > ID_SIZE)
