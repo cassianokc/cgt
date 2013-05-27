@@ -120,7 +120,7 @@ int hmap_remove(struct hmap *map, void *key, void *data)
 int hmap_search(struct hmap *map, void *key, void *data)
 {
 	unsigned long i=0, index=map->hash(key);
-	unsigned char *aux_key=map->keys, *aux_data=map->data;
+	char *aux_key=map->keys, *aux_data=map->data;
 	while (!is_empty(aux_key+((index+i)%map->map_size)*(map->key_size),
 				map->key_size)&&i!=map->map_size)
 	{
@@ -139,7 +139,7 @@ int hmap_search(struct hmap *map, void *key, void *data)
 void hmap_print(struct hmap *map)
 {
   unsigned long i, j;
-	unsigned char *aux_key=map->keys, *aux_data=map->data;
+	char *aux_key=map->keys, *aux_data=map->data;
   printf("Struct hmap at %p\n", (void *) map);
   printf("map_size=%lu    key_size=%lu    data_size=%lu\n", map->map_size,
         map->key_size, map->data_size);

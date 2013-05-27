@@ -3,7 +3,7 @@
 #include "common.h"
 #include "extern.h"
 #include "cgt.h"
-#include "hmap.h"
+#include "hmap.h" 
 #include "lexer.tab.h"
 }
 %union
@@ -56,8 +56,13 @@ char val_string[ID_SIZE];
 %start programa
 %%
 
-programa:KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo 
-	PUNCTUATOR_PERIOD;
+programa: KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD 
+	| error VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD 
+{
+	yyerrok; 
+	printf("and expected program.\n");
+}
+
 corpo: dc KEYWORD_BEGIN comandos KEYWORD_END ;
 dc: dc_c dc_v dc_p ;
 dc_c: KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero | 
@@ -117,14 +122,11 @@ mais_fatores : op_mul fator mais_fatores |
 op_mul : OPERATOR_MUL | OPERATOR_DIV ;
 fator : VAL_STRING | numero | PUNCTUATOR_LPAREN expressao PUNCTUATOR_RPAREN ;
 numero : VAL_INTEGER | VAL_FLOAT ;
-caracter : VAL_STRING 
-
-
 
 %%
 
 int yyerror(char *s)
 {
-	printf("ERRO %s\n", s);
+	printf("Syntatic error at %u: Found %s ", current_line, yytext);
 	return 1;
 }

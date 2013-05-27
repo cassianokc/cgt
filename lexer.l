@@ -138,7 +138,6 @@ alphanum [a-zA-Z_0-9]
 	return VAL_FLOAT;
 }
 
-
 . {
 	printf("Lexical error at %u: Char %s is invalid.\n", current_line, yytext);
 	return LEX_ERROR;
