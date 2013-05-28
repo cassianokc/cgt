@@ -1,7 +1,8 @@
 Compiling:
 	To compile the code simply use:
+	$make clean
 	$make all
 	This command will generate an executable cgt.
 
 Calling: 
-	To call the program use ./cgt, you can then put the source that you want to make the lexical analysys, there are one example that you can run using:	$./cgt < example.in
+	To call the program use ./cgt, you can then put the source that you want to make the lexical analysys, there are one example that you can run using: $./cgt < example.in
