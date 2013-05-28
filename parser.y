@@ -284,6 +284,5 @@ numero:
 int yyerror(char *s)
 {
 	printf("Syntatic error at line %u: found '%s' ", current_line, yytext);
-	printf("%s", s);
 	return 1;
 }
