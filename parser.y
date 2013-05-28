@@ -219,7 +219,7 @@ relacao:
 	| OPERATOR_LEQUAL
 	| OPERATOR_LESSER
 	| OPERATOR_GREATER
-	| error { printf("and a valid operator was expected."); yyclearin; }; 
+	| error { yyerrok; printf("and a valid operator was expected."); }; 
 	;
 
 // <expressao> ::= <termo> <outros_termos>
@@ -274,7 +274,7 @@ fator:
 numero:
 	VAL_INTEGER
 	| VAL_FLOAT
-	| error { printf("and a number was expected."); yyclearin; }
+	| error { yyerrok; printf("and a number was expected."); }
 	;
 
 %%
