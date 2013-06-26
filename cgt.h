@@ -12,6 +12,10 @@ struct symbol
 	unsigned context;
 };
 
+#define TYPE_INT 1
+#define TYPE_FLOAT 2
+#define TYPE_PROCEDURE 3
+
 unsigned long hash(const void *a);
 void init_wk_table(struct hmap *map);
 

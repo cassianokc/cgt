@@ -6,13 +6,19 @@
 #include "cgt.h"
 #include "hmap.h" 
 #include "lexer.tab.h"
+
 }
 
 // Union com os possiveis tipos para as variaveis, integer, real e string
-%union {
+%union YYSTYPE {
 	int val_integer;
 	float val_float;
 	char val_string[ID_SIZE];
+	struct var
+	{
+		unsigned context;
+		unsigned type;
+	} var;
 }
 
 // Tokens obtidas no analisador lexico, que serao utilizados nas regras da gramatica
@@ -61,132 +67,145 @@
 %token PUNCTUATOR_DDOTS
 // Token de erro
 %token LEX_ERROR
+
+// Tipos dos não terminais.
+%type <var> tipo_var
+%type <var> variaveis
 // Simbolo inicial da linguagem
-%expect 6
 %start programa
+%expect 6
 
 %% // Regras da LALG
 
 // <programa> ::= program ident ; corpo .
 programa:
-	KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD 
-	| error VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { yyerrok; printf("and 'program' was expected.\n"); }
-	| KEYWORD_PROGRAM VAL_STRING error corpo PUNCTUATOR_PERIOD { yyerrok; printf("and ';' was expected.\n"); }
-	| KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo error { yyerrok; printf("and '.' was expected.\n"); }
-	;
+KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD 
+| error VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { yyerrok; printf("and 'program' was expected.\n"); }
+| KEYWORD_PROGRAM VAL_STRING error corpo PUNCTUATOR_PERIOD { yyerrok; printf("and ';' was expected.\n"); }
+| KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo error { yyerrok; printf("and '.' was expected.\n"); }
+;
 
 // <corpo> ::= <dc> begin <comandos> end
 corpo:
-	dc KEYWORD_BEGIN comandos KEYWORD_END
-	| dc error comandos KEYWORD_END { yyerrok; printf("and 'begin' was expected.\n"); } 
-	| dc KEYWORD_BEGIN comandos error { yyerrok; printf("and 'end' was expected.\n"); }
-	;
+dc KEYWORD_BEGIN comandos KEYWORD_END
+| dc error comandos KEYWORD_END { yyerrok; printf("and 'begin' was expected.\n"); } 
+| dc KEYWORD_BEGIN comandos error { yyerrok; printf("and 'end' was expected.\n"); }
+;
 
 // <dc> ::= <dc_c> <dc_v> <dc_p>
 dc:
-	dc_c dc_v dc_p
-	;
+dc_c dc_v dc_p
+;
 
 // <dc_c> ::= const ident = <numero> ; <dc_c> | λ
 dc_c:
-	KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c
-	| KEYWORD_CONST VAL_STRING error numero PUNCTUATOR_SEMICOLON dc_c { yyerrok; printf("and ':=' was expected.\n"); }
-	| KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero error dc_c { yyerrok; printf("and ';' was expected.\n"); }
-	| 
-	;
+KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c
+| KEYWORD_CONST VAL_STRING error numero PUNCTUATOR_SEMICOLON dc_c { yyerrok; printf("and ':=' was expected.\n"); }
+| KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero error dc_c { yyerrok; printf("and ';' was expected.\n"); }
+| 
+;
 
 // <dc_v> ::= var <variaveis> : <tipo_var> ; <dc_v> | λ
 dc_v:
-	KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v
-	| KEYWORD_VAR variaveis error tipo_var PUNCTUATOR_SEMICOLON dc_v { yyerrok; printf("and ':' was expected.\n"); }
-	| KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var error dc_v { yyerrok; printf("and ';' was expected.\n"); }
-	|
-	;
-	
+KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v 
+{
+	$2.type = $4.type;	
+}
+| KEYWORD_VAR variaveis error tipo_var PUNCTUATOR_SEMICOLON dc_v { yyerrok; printf("and ':' was expected.\n"); }
+| KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var error dc_v { yyerrok; printf("and ';' was expected.\n"); }
+|
+;
+
 // <tipo_var> ::= real | integer
 tipo_var:
-	KEYWORD_REAL
-	| KEYWORD_INTEGER
-	| error { yyerrok; printf("and 'integer' or 'real' were expected.\n"); }
-	;
-	
+KEYWORD_REAL
+{
+	$$.type = TYPE_INT;
+}
+| KEYWORD_INTEGER
+{
+	$$.type = TYPE_FLOAT;
+}
+| error { yyerrok; printf("and 'integer' or 'real' were expected.\n"); }
+;
+
 // <variaveis> ::= ident <mais_var>
 variaveis:
-	VAL_STRING mais_var
-	;
+VAL_STRING mais_var
+;
 
 // <mais_var> ::= , <variaveis> | λ
 mais_var:
-	PUNCTUATOR_COMMA variaveis
-	|
-	;
-	
+PUNCTUATOR_COMMA variaveis
+|
+;
+
 // <dc_p> ::= procedure ident <parametros> ; <corpo_p> <dc_p> | λ
 dc_p :
-	KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p dc_p
-	|
-	;
+KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p dc_p
+|
+;
 
 // <parametros> ::= ( <lista_par> ) | λ
 parametros:
-	PUNCTUATOR_LPAREN lista_par PUNCTUATOR_RPAREN
-	| 
-	;
+PUNCTUATOR_LPAREN lista_par PUNCTUATOR_RPAREN
+| 
+;
 
 // <lista_par> ::= <variaveis> : <tipo_var> <mais_par>
 lista_par:
-	variaveis PUNCTUATOR_DDOTS tipo_var mais_par
-	| variaveis error tipo_var mais_par { yyerrok; printf("and ':' was expected.\n"); }
-	;
+variaveis PUNCTUATOR_DDOTS tipo_var mais_par
+| variaveis error tipo_var mais_par { yyerrok; printf("and ':' was expected.\n"); }
+;
 
 // <mais_par> ::= ; <lista_par> | λ
 mais_par:
-	PUNCTUATOR_SEMICOLON lista_par
-	|
-	;
+PUNCTUATOR_SEMICOLON lista_par
+|
+;
 
 // <corpo_p> ::= <dc_loc> begin <comandos> end ;	
 corpo_p:
-	dc_loc KEYWORD_BEGIN comandos KEYWORD_END PUNCTUATOR_SEMICOLON
-	| dc_loc KEYWORD_BEGIN comandos KEYWORD_END error { yyerrok; printf("and ';' was expected.\n"); }
-	| dc_loc KEYWORD_BEGIN comandos error PUNCTUATOR_SEMICOLON { yyerrok; printf("and 'end' was expected.\n"); }
-	;
+dc_loc KEYWORD_BEGIN comandos KEYWORD_END PUNCTUATOR_SEMICOLON
+| dc_loc KEYWORD_BEGIN comandos KEYWORD_END error { yyerrok; printf("and ';' was expected.\n"); }
+| dc_loc KEYWORD_BEGIN comandos error PUNCTUATOR_SEMICOLON { yyerrok; printf("and 'end' was expected.\n"); }
+;
 
 // <dc_loc> ::= <dc_v>
 dc_loc:
-	dc_v
-	;
+dc_v
+;
 
 // <lista_arg> ::= ( <argumentos> ) | λ
 lista_arg:
-	PUNCTUATOR_LPAREN argumentos PUNCTUATOR_RPAREN
-	| 
-	;
+PUNCTUATOR_LPAREN argumentos PUNCTUATOR_RPAREN
+| 
+;
 
 // <argumentos> ::= ident <mais_ident>
 argumentos:
-	VAL_STRING mais_ident
-	;
+VAL_STRING mais_ident
+;
 
 // <mais_ident> ::= ; <argumentos> | λ
 mais_ident:
-	PUNCTUATOR_SEMICOLON argumentos
-	|
-	;
+PUNCTUATOR_SEMICOLON argumentos
+|
+;
 
 // <pfalsa> ::= else <cmd> | λ
 p_falsa: KEYWORD_ELSE cmd
-	|
-	;
+|
+;
 
 // <comandos> ::= <cmd> ; <comandos> | λ
 comandos:
-	cmd PUNCTUATOR_SEMICOLON comandos
-	| error PUNCTUATOR_SEMICOLON comandos { yyerrok; printf("and it is not a valid command.\n"); }
-	| cmd error comandos { yyerrok; printf("and ';' was expected\n"); }
-	|
-	;
-	
+cmd PUNCTUATOR_SEMICOLON comandos
+| error PUNCTUATOR_SEMICOLON comandos { yyerrok; printf("and it is not a valid command.\n"); }
+| cmd error comandos { yyerrok; printf("and ';' was expected\n"); }
+|
+;
+
 // <cmd> ::= read ( <variaveis> ) |
 //		write ( <variaveis> ) |
 //		while ( <condicao> ) do <cmd> |
@@ -195,87 +214,87 @@ comandos:
 //		ident <lista_arg> |
 //		begin <comandos> end
 cmd:
-	KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
-	| KEYWORD_WRITE PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
-	| KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
-	| KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
-	| VAL_STRING OPERATOR_ATRIB expressao
-	| VAL_STRING lista_arg
-	| KEYWORD_BEGIN comandos KEYWORD_END
-	| KEYWORD_REPEAT comandos KEYWORD_UNTIL condicao
-	| KEYWORD_FOR VAL_STRING OPERATOR_ATRIB expressao KEYWORD_TO expressao KEYWORD_DO cmd
-	;
+KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
+| KEYWORD_WRITE PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
+| KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
+| KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
+| VAL_STRING OPERATOR_ATRIB expressao
+| VAL_STRING lista_arg
+| KEYWORD_BEGIN comandos KEYWORD_END
+| KEYWORD_REPEAT comandos KEYWORD_UNTIL condicao
+| KEYWORD_FOR VAL_STRING OPERATOR_ATRIB expressao KEYWORD_TO expressao KEYWORD_DO cmd
+;
 
 // <condicao> ::= <expressao> <relacao> <expressao>
 condicao:
-	expressao relacao expressao
-	;
+expressao relacao expressao
+;
 
 // <relacao> ::= = | <> | >= | <= | > | <
 relacao:
-	OPERATOR_EQUAL
-	| OPERATOR_NEQUAL
-	| OPERATOR_GEQUAL
-	| OPERATOR_LEQUAL
-	| OPERATOR_LESSER
-	| OPERATOR_GREATER
-	| error { yyerrok; printf("and a valid operator was expected."); }; 
-	;
+OPERATOR_EQUAL
+| OPERATOR_NEQUAL
+| OPERATOR_GEQUAL
+| OPERATOR_LEQUAL
+| OPERATOR_LESSER
+| OPERATOR_GREATER
+| error { yyerrok; printf("and a valid operator was expected."); }; 
+;
 
 // <expressao> ::= <termo> <outros_termos>
 expressao:
-	termo outros_termos
-	;
+termo outros_termos
+;
 
 // <op_un> ::= + | - | λ
 op_un:
-	OPERATOR_PLUS
-	| OPERATOR_MINUS
-	|
-	;
+OPERATOR_PLUS
+| OPERATOR_MINUS
+|
+;
 
 // <outros_termos> ::= <op_ad> <termo> <outros_termos> | λ
 outros_termos:
-	op_ad termo outros_termos
-	|
-	;
+op_ad termo outros_termos
+|
+;
 
 // <op_ad> ::= + | -
 op_ad:
-	OPERATOR_PLUS
-	| OPERATOR_MINUS
-	;
+OPERATOR_PLUS
+| OPERATOR_MINUS
+;
 
 // <termo> ::= <op_un> <fator> <mais_fatores>
 termo:
-	op_un fator mais_fatores
-	;
+op_un fator mais_fatores
+;
 
 // <mais_fatores> ::= <op_mul> <fator> <mais_fatores> | λ
 mais_fatores:
-	op_mul fator mais_fatores
-	|
-	;
+op_mul fator mais_fatores
+|
+;
 
 // <op_mul> ::= * | /
 op_mul:
-	OPERATOR_MUL
-	| OPERATOR_DIV
-	;
+OPERATOR_MUL
+| OPERATOR_DIV
+;
 
 // <fator> ::= ident | <numero> | ( <expressao> )
 fator:
-	VAL_STRING
-	| numero
-	| PUNCTUATOR_LPAREN expressao PUNCTUATOR_RPAREN
-	;
+VAL_STRING
+| numero
+| PUNCTUATOR_LPAREN expressao PUNCTUATOR_RPAREN
+;
 
 // <numero> ::= numero_int | numero_real
 numero:
-	VAL_INTEGER
-	| VAL_FLOAT
-	| error { yyerrok; printf("and a number was expected."); }
-	;
+VAL_INTEGER
+| VAL_FLOAT
+| error { yyerrok; printf("and a number was expected."); }
+;
 
 %%
 

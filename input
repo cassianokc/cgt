@@ -1,10 +1,12 @@
-programa id;
+program id;
 {exemplo 1}
 const a = 1;
-var a, a1, b: integer;
+var a, a1: integer;
+var b: real;
 begin
 read(a); 
 a1:= a1*2; 
+b:=a;
 while (a1>0) do 
 begin 
 write(a1); 
