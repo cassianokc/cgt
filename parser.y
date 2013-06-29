@@ -12,6 +12,14 @@
 		int value;
 	} OP;
 
+	struct val
+{
+	unsigned context;
+	unsigned type;
+};
+
+
+	
 	FILE *f;
 	OP c[1024];
 	int opCount;
@@ -27,14 +35,29 @@
 
 // Union com os possiveis tipos para as variaveis, integer, real e string
 %union YYSTYPE {
-	int val_integer;
-	float val_float;
-	char val_string[ID_SIZE];
-	struct var
-	{
-		unsigned context;
-		unsigned type;
-	} var;
+		struct val_integer
+		{
+			unsigned context;
+			unsigned type;
+			int val;
+		} val_integer;
+		struct val_float
+		{
+			unsigned context;
+			unsigned type;
+			float val;
+		} val_float;
+		struct val_string
+		{
+			unsigned context;
+			unsigned type;
+			char val[ID_SIZE];
+		} val_string;
+		struct val_info{
+			unsigned context;
+			unsigned type;
+		} val_info;
+
 }
 
 // Tokens obtidas no analisador lexico, que serao utilizados nas regras da gramatica
@@ -85,8 +108,8 @@
 %token LEX_ERROR
 
 // Tipos dos não terminais.
-%type <var> tipo_var
-%type <var> variaveis
+%type <val_info> tipo_var
+%type <val_info> variaveis
 // Simbolo inicial da linguagem
 %start programa
 %expect 6

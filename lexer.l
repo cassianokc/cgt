@@ -114,7 +114,7 @@ alphanum [a-zA-Z_0-9]
 		}
 		else
 		{
-			strcpy(yylval.val_string, yytext);		
+			strcpy(yylval.val_string.val, yytext);		
 			return VAL_STRING; 
 		}
 	}
@@ -128,13 +128,13 @@ alphanum [a-zA-Z_0-9]
 	}
 	else
 	{
-		yylval.val_integer = atoi(yytext);
+		yylval.val_integer.val = atoi(yytext);
 		return VAL_INTEGER;
 	}
 	 }
 
 {digit}+\.{digit}+ {
-	yylval.val_float = atof(yytext);
+	yylval.val_float.val = atof(yytext);
 	return VAL_FLOAT;
 }
 

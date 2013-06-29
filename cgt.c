@@ -15,7 +15,7 @@ int main(void)
 {
 	wk_table = hmap_init(MAP_SIZE, 15*sizeof(char), sizeof(int), hash);
 	init_wk_table(wk_table);
-	sym_table = hmap_init(MAP_SIZE, ID_SIZE*sizeof(char), sizeof(struct var), hash);
+	sym_table = hmap_init(MAP_SIZE, ID_SIZE*sizeof(char), sizeof(struct symbol), hash);
 	yyparse();
 	hmap_free(wk_table);
 	hmap_free(sym_table);

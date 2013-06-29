@@ -8,7 +8,7 @@
 
 struct symbol
 {
-	int type;
+	unsigned type;
 	unsigned context;
 };
 
