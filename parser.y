@@ -1,13 +1,29 @@
-// Includes selecionados para o arquivo C
-%code top {
-#include <stdio.h>
-#include "common.h"
-#include "extern.h"
-#include "cgt.h"
-#include "hmap.h" 
-#include "lexer.tab.h"
+%{
+	// Includes selecionados para o arquivo C
+	#include <stdio.h>
+	#include "common.h"
+	#include "extern.h"
+	#include "cgt.h"
+	#include "hmap.h" 
+	#include "lexer.tab.h"
 
-}
+	typedef struct {
+		char op[5];
+		int value;
+	} OP;
+
+	FILE *f;
+	OP c[1024];
+	int opCount;
+
+	int yyerror(char *s);
+	void codeInit();
+	void codeGenerationWithoutValue(char *op);
+	void codeGeneration(char *op, int value);
+	void printCode();
+	void openFile();
+	void closeFile();
+%}
 
 // Union com os possiveis tipos para as variaveis, integer, real e string
 %union YYSTYPE {
@@ -79,7 +95,7 @@
 
 // <programa> ::= program ident ; corpo .
 programa:
-KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD 
+KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { codeGenerationWithoutValue("INPP"); printCode();}
 | error VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { yyerrok; printf("and 'program' was expected.\n"); }
 | KEYWORD_PROGRAM VAL_STRING error corpo PUNCTUATOR_PERIOD { yyerrok; printf("and ';' was expected.\n"); }
 | KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo error { yyerrok; printf("and '.' was expected.\n"); }
@@ -214,7 +230,7 @@ cmd PUNCTUATOR_SEMICOLON comandos
 //		ident <lista_arg> |
 //		begin <comandos> end
 cmd:
-KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
+KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN { codeGeneration("LEIT", 0); codeGeneration("ARMZ", 0); }
 | KEYWORD_WRITE PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
 | KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
 | KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
@@ -304,4 +320,35 @@ int yyerror(char *s)
 {
 	printf("Syntatic error at line %u: found '%s' ", current_line, yytext);
 	return 1;
+}
+
+void codeInit() {
+	opCount = 0;	
+}
+
+void codeGenerationWithoutValue(char *op) {
+	strcpy(c[opCount].op, op);
+	c[opCount].value = NULL;
+	opCount++; 
+}
+
+void codeGeneration(char *op, int value) {
+	strcpy(c[opCount].op, op);
+	c[opCount].value = value;
+	opCount++; 
+}
+
+void printCode() {
+	int i;
+	for(i = 0; i < opCount; i++) {
+		printf("%s %d\n", c[i].op, c[i].value);
+	}
+}
+
+void openFile() {
+	f = fopen("code.txt","w");
+}
+
+void closeFile() {
+	fclose(f);
 }
