@@ -171,6 +171,9 @@ KEYWORD_REAL
 // <variaveis> ::= ident <mais_var>
 variaveis:
 VAL_STRING mais_var
+{
+	$$.type = $1.type;
+}
 ;
 
 // <mais_var> ::= , <variaveis> | λ
