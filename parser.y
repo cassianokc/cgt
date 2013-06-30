@@ -31,6 +31,7 @@
 	void printCode();
 	void openFile();
 	void closeFile();
+	int hmap_insert(struct hmap *map, void *key, void *data);
 %}
 
 // Union com os possiveis tipos para as variaveis, integer, real e string
@@ -110,6 +111,8 @@
 // Tipos dos não terminais.
 %type <val_info> tipo_var
 %type <val_info> variaveis
+%type <val_info> mais_var
+%type <val_info> dc_p
 // Simbolo inicial da linguagem
 %start programa
 %expect 6
@@ -173,18 +176,26 @@ variaveis:
 VAL_STRING mais_var
 {
 	$$.type = $1.type;
+	$2.type = $1.type;
+	
 }
 ;
 
 // <mais_var> ::= , <variaveis> | λ
 mais_var:
 PUNCTUATOR_COMMA variaveis
+{
+	$2.type = $$.type;
+}
 |
 ;
 
 // <dc_p> ::= procedure ident <parametros> ; <corpo_p> <dc_p> | λ
 dc_p :
 KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p dc_p
+{
+	$$.type = $2.type;
+}
 |
 ;
 
