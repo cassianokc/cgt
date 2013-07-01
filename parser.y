@@ -110,7 +110,16 @@
 %type <val_info> tipo_var
 %type <val_info> variaveis
 %type <val_info> mais_var
+%type <val_info> outras_variaveis
+%type <val_info> outras_mais_var
 %type <val_info> dc_p
+%type <val_info> condicao
+%type <val_info> expressao
+%type <val_info> termo
+%type <val_info> fator
+%type <val_info> numero
+%type <val_info> outros_termos
+%type <val_info> mais_fatores
 // Simbolo inicial da linguagem
 %start programa
 %expect 6
@@ -119,7 +128,7 @@
 
 // <programa> ::= program ident ; corpo .
 programa:
-KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { codeGenerationWithoutValue("INPP"); printCode();}
+KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { }
 | error VAL_STRING PUNCTUATOR_SEMICOLON corpo PUNCTUATOR_PERIOD { yyerrok; printf("and 'program' was expected.\n"); }
 | KEYWORD_PROGRAM VAL_STRING error corpo PUNCTUATOR_PERIOD { yyerrok; printf("and ';' was expected.\n"); }
 | KEYWORD_PROGRAM VAL_STRING PUNCTUATOR_SEMICOLON corpo error { yyerrok; printf("and '.' was expected.\n"); }
@@ -139,7 +148,7 @@ dc_c dc_v dc_p
 
 // <dc_c> ::= const ident = <numero> ; <dc_c> | λ
 dc_c:
-KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c
+KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c { codeGeneration("ALME", 1); }
 | KEYWORD_CONST VAL_STRING error numero PUNCTUATOR_SEMICOLON dc_c { yyerrok; printf("and ':=' was expected.\n"); }
 | KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero error dc_c { yyerrok; printf("and ';' was expected.\n"); }
 | 
@@ -149,7 +158,7 @@ KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c
 dc_v:
 KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v 
 {
-	$2.type = $4.type;	
+		
 }
 | KEYWORD_VAR variaveis error tipo_var PUNCTUATOR_SEMICOLON dc_v { yyerrok; printf("and ':' was expected.\n"); }
 | KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var error dc_v { yyerrok; printf("and ';' was expected.\n"); }
@@ -160,11 +169,25 @@ KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v
 tipo_var:
 KEYWORD_REAL
 {
-	$$.type = TYPE_INT;
+	struct symbol sym;
+	while (!squeue_is_empty(undeclared_vars))
+	{
+		squeue_remove(undeclared_vars, &sym);
+		sym.type = TYPE_FLOAT;
+		hmap_update(sym_table, sym.key, &sym);
+	
+	}
 }
 | KEYWORD_INTEGER
 {
-	$$.type = TYPE_FLOAT;
+	struct symbol sym;
+	while (!squeue_is_empty(undeclared_vars))
+	{
+		squeue_remove(undeclared_vars, &sym);
+		sym.type = TYPE_INT;
+		hmap_update(sym_table, sym.key, &sym);
+
+	}
 }
 | error { yyerrok; printf("and 'integer' or 'real' were expected.\n"); }
 ;
@@ -178,10 +201,14 @@ VAL_STRING mais_var
 	{
 		printf("Semantic error at line %u: Identifier %s has already been declared.\n", current_line, $1.val);
 	}
-	sym.type = $$.type;
-	sym.context = is_global_ctx;
-	sym.position = ++mem_position;
-	hmap_insert(sym_table, $1.val, &sym);
+	else 
+	{
+		sym.context = is_global_ctx;
+		sym.position = ++mem_position;
+		strcpy(sym.key, $1.val);
+		squeue_insert(undeclared_vars, &sym);
+		hmap_insert(sym_table, &sym.key, &sym);
+	}
 }
 ;
 
@@ -189,7 +216,7 @@ VAL_STRING mais_var
 mais_var:
 PUNCTUATOR_COMMA variaveis
 {
-	$2.type = $$.type;
+	
 }
 |
 ;
@@ -278,7 +305,19 @@ KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGenerati
 | KEYWORD_WRITE PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN
 | KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
 | KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
-| VAL_STRING OPERATOR_ATRIB expressao
+| VAL_STRING OPERATOR_ATRIB expressao { 
+	struct symbol sym;
+	if (hmap_search(sym_table, $1.val, &sym) == FAILURE)
+	{
+		printf("Semantic error at line %u: Undeclared identifier %s.\n",
+				current_line, $1.val); 
+	}
+	if (sym.type != $3.type)
+	{
+		printf("Semantic error at line %u: Atribution between different types.\n", current_line);
+	}
+	codeGeneration("ARMZ", 0); 
+}
 | VAL_STRING lista_arg
 | KEYWORD_BEGIN comandos KEYWORD_END
 | KEYWORD_REPEAT comandos KEYWORD_UNTIL condicao
@@ -287,18 +326,36 @@ KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGenerati
 
 // <outras_variaveis> ::= ident <outras_mais_var>
 outras_variaveis:
-VAL_STRING outras_mais_var
+VAL_STRING outras_mais_var {
+	struct symbol sym;
+	hmap_search(sym_table, $1.val, &sym);
+	if (sym.type != $2.type && $2.type != TYPE_ALL)
+	{
+		printf("Semantic error at line %u: Read/Write variables must have the same type.\n", current_line);
+	}
+	$$.type = sym.type;
+}
 ;
 
 // <outras_mais_var> ::= , <outras_variaveis> | λ
 outras_mais_var:
-PUNCTUATOR_COMMA outras_variaveis
+PUNCTUATOR_COMMA outras_variaveis {
+	$$.type = $2.type;
+}
 |
+{
+	$$.type = TYPE_ALL;
+}
 ;
 
 // <condicao> ::= <expressao> <relacao> <expressao>
 condicao:
-expressao relacao expressao
+expressao relacao expressao {
+	if ($1.type != $3.type)
+	{
+		printf("Semantic error at line %u: Comparison between different types.\n", current_line);
+	}
+}
 ;
 
 // <relacao> ::= = | <> | >= | <= | > | <
@@ -314,7 +371,9 @@ OPERATOR_EQUAL
 
 // <expressao> ::= <termo> <outros_termos>
 expressao:
-termo outros_termos
+termo outros_termos {
+	$$.type = $1.type;
+}
 ;
 
 // <op_un> ::= + | - | λ
@@ -326,8 +385,16 @@ OPERATOR_PLUS
 
 // <outros_termos> ::= <op_ad> <termo> <outros_termos> | λ
 outros_termos:
-op_ad termo outros_termos
-|
+op_ad termo outros_termos {
+	if ($2.type != $3.type&&$3.type!=TYPE_ALL)
+	{
+		printf("Semantic error at line %u: Sum or subtraction between different types.\n", current_line);
+	}
+	$$.type = $2.type;
+}
+| {
+	$$.type = TYPE_ALL;
+}
 ;
 
 // <op_ad> ::= + | -
@@ -338,13 +405,24 @@ OPERATOR_PLUS
 
 // <termo> ::= <op_un> <fator> <mais_fatores>
 termo:
-op_un fator mais_fatores
+op_un fator mais_fatores {
+	$$.type = $2.type;
+}
 ;
 
 // <mais_fatores> ::= <op_mul> <fator> <mais_fatores> | λ
 mais_fatores:
-op_mul fator mais_fatores
+op_mul fator mais_fatores {
+	if ($2.type != $3.type&&$3.type!=TYPE_ALL)
+	{
+		printf("Semantic error at line %u: Multiplication or division between different types.\n", current_line);
+	}
+	$$.type = $2.type;
+}
 |
+{
+	$$.type = TYPE_ALL;
+}
 ;
 
 // <op_mul> ::= * | /
@@ -358,19 +436,28 @@ fator:
 VAL_STRING {
 	struct symbol sym;
 	if (hmap_search(sym_table, $1.val, &sym) == SUCCESS)
-		printf("Identifier of type %u on context %u with position %u.\n", sym.type, sym.context, sym.position);
+	{
+		$$.type = sym.type;
+	}
 	else
 		printf("Semantic error at line %u: Undeclared identifier %s.\n", current_line, $1.val);
-
 }
-| numero
-| PUNCTUATOR_LPAREN expressao PUNCTUATOR_RPAREN
+| numero {
+	$$.type = $1.type;
+}
+| PUNCTUATOR_LPAREN expressao PUNCTUATOR_RPAREN {
+	$$.type = $2.type;
+}
 ;
 
 // <numero> ::= numero_int | numero_real
 numero:
-VAL_INTEGER
-| VAL_FLOAT
+VAL_INTEGER {
+	$$.type = TYPE_INT;
+}
+| VAL_FLOAT {
+	$$.type = TYPE_FLOAT;
+}
 | error { yyerrok; printf("and a number was expected."); }
 ;
 

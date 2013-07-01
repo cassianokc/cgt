@@ -2,7 +2,7 @@ CC=gcc
 CCFLAGS=-std=c99 -Wall -Wextra -pedantic
 CLFLAGS=
 
-all: hmap.o parser.tab.o lexer.tab.o cgt.o
+all: hmap.o squeue.o parser.tab.o lexer.tab.o cgt.o
 	$(CC) $^ $(CLFLAGS) -o cgt
 
 lexer.tab.o: lexer.tab.c parser.tab.c common.h
@@ -18,6 +18,9 @@ parser.tab.c:
 	yacc -d -b parser parser.y
 
 hmap.o: hmap.c hmap.h common.h
+	$(CC) $(CCFLAGS) $< -c
+
+squeue.o: squeue.c squeue.h common.h
 	$(CC) $(CCFLAGS) $< -c
 
 cgt.o: cgt.c common.h

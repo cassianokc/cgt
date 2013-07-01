@@ -127,14 +127,33 @@ int hmap_search(struct hmap *map, void *key, void *data)
 		if (strncmp(aux_key+((index+i)%map->map_size)*(map->key_size), key,
 					map->key_size) == 0)
 		{
-			memcpy(data, aux_data+((index+i)%map->map_size)*(map->data_size),
-					map->data_size);
+			memcpy(data, aux_data+((index+i)%map->map_size)*(map->data_size), map->data_size);
 			return SUCCESS;
 		}
 		i++;
 	}
 	return FAILURE;
 }
+
+int hmap_update(struct hmap *map, void *key, void *data)
+{
+	unsigned long i=0, index=map->hash(key);
+	char *aux_key=map->keys, *aux_data=map->data;
+	while (!is_empty(aux_key+((index+i)%map->map_size)*(map->key_size),
+				map->key_size)&&i!=map->map_size)
+	{
+		if (strncmp(aux_key+((index+i)%map->map_size)*(map->key_size), key,
+					map->key_size) == 0)
+		{
+		memcpy(aux_data+((index+i)%map->map_size)*(map->data_size), data
+			, map->data_size);
+		return SUCCESS;
+		}
+		i++;
+	}
+	return FAILURE;
+}
+
 
 void hmap_print(struct hmap *map)
 {

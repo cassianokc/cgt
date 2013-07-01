@@ -84,6 +84,17 @@ int hmap_remove(struct hmap *map, void *key, void *data);
 int hmap_search(struct hmap *map, void *key, void *data);
 
 /*
+* 	Searches a data identified by key on a given hmap strucuture and updates
+* it.
+* 	@param map Pointer to a hmap structure from where the data is going
+* to be searched.
+* 	@param data Pointer to which the data data will be writen.
+* 	@return Returns SUCCESS if the data was found  and FAILURE otherwise.
+*/
+int hmap_update(struct hmap *map, void *key, void *data);
+
+
+/*
 *		Prints all data in the hmap structure for debugging.
 * 	@param map Pointer to the hmap structure that will be printed.
 */

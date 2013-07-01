@@ -2,12 +2,14 @@
 #include "lexer.tab.h"
 #include "parser.tab.h"
 #include "hmap.h"
+#include "squeue.h"
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 struct hmap *wk_table;
 struct hmap *sym_table;
+struct squeue *undeclared_vars;
 unsigned mem_position=0;
 unsigned current_line=1;
 bool is_global_ctx=TRUE;
@@ -15,12 +17,15 @@ bool is_global_ctx=TRUE;
 
 int main(void)
 {
+	struct symbol sym;
 	wk_table = hmap_init(MAP_SIZE, 15*sizeof(char), sizeof(int), hash);
 	init_wk_table(wk_table);
 	sym_table = hmap_init(MAP_SIZE, ID_SIZE*sizeof(char), sizeof(struct symbol), hash);
+	undeclared_vars = squeue_init(100, sizeof(struct symbol));
 	yyparse();
 	hmap_free(wk_table);
 	hmap_free(sym_table);
+	squeue_free(undeclared_vars);
 	return SUCCESS;
 }
 
