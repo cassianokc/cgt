@@ -1,11 +1,11 @@
 %{
 	// Includes selecionados para o arquivo C
-#include <stdio.h>
-#include "common.h"
-#include "extern.h"
-#include "cgt.h"
-#include "hmap.h" 
-#include "lexer.tab.h"
+	#include <stdio.h>
+	#include "common.h"
+	#include "extern.h"
+	#include "cgt.h"
+	#include "hmap.h" 
+	#include "lexer.tab.h"
 
 	typedef struct {
 		char op[5];
@@ -14,8 +14,6 @@
 
 	struct val
 	{ unsigned context; unsigned type; };
-
-
 
 	FILE *f;
 	OP c[1024];
@@ -155,10 +153,7 @@ KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c { codeG
 
 // <dc_v> ::= var <variaveis> : <tipo_var> ; <dc_v> | λ
 dc_v:
-KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v 
-{
-
-}
+KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v { codeGeneration("ALME", 1); }
 | KEYWORD_VAR variaveis error tipo_var PUNCTUATOR_SEMICOLON dc_v { yyerrok; printf("and ':' was expected.\n"); }
 | KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var error dc_v { yyerrok; printf("and ';' was expected.\n"); }
 |
@@ -214,10 +209,7 @@ VAL_STRING mais_var
 
 // <mais_var> ::= , <variaveis> | λ
 mais_var:
-PUNCTUATOR_COMMA variaveis
-{
-
-}
+PUNCTUATOR_COMMA variaveis { codeGeneration("ALME", 1); }
 |
 ;
 
@@ -307,7 +299,7 @@ cmd PUNCTUATOR_SEMICOLON comandos
 //		ident <lista_arg> |
 //		begin <comandos> end
 cmd:
-KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGeneration("LEIT", 0); codeGeneration("ARMZ", 0); }
+KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { }
 | KEYWORD_WRITE PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN
 | KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
 | KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
@@ -315,8 +307,7 @@ KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGenerati
 	struct symbol sym;
 	if (hmap_search(sym_table, $1.val, &sym) == FAILURE)
 	{
-		printf("Semantic error at line %u: Undeclared identifier %s.\n",
-				current_line, $1.val); 
+		printf("Semantic error at line %u: Undeclared identifier %s.\n", current_line, $1.val); 
 		found_error=TRUE;
 	}
 	if (sym.type != $3.type)
@@ -329,8 +320,6 @@ KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGenerati
 		printf("Semantic error at line %u: Identifier %s used out of context.\n", current_line, sym.key);
 		found_error=TRUE;
 	}
-
-	codeGeneration("ARMZ", 0); 
 }
 | VAL_STRING lista_arg
 | KEYWORD_BEGIN comandos KEYWORD_END
@@ -467,9 +456,10 @@ VAL_STRING {
 		}
 		$$.type = sym.type;
 	}
-	else
+	else {
 		printf("Semantic error at line %u: Undeclared identifier %s.\n", current_line, $1.val);
-	found_error=TRUE;
+		found_error=TRUE;
+	}
 }
 | numero {
 	$$.type = $1.type;
@@ -502,25 +492,34 @@ int yyerror(char *s)
 }
 
 void codeInit() {
-	opCount = 0;	
+	opCount = 0;
+	codeGenerationWithoutValue("INPP");
 }
 
 void codeGenerationWithoutValue(char *op) {
-	strcpy(c[opCount].op, op);
-	c[opCount].value = NULL;
-	opCount++; 
+	if(found_error == FALSE) {	
+		strcpy(c[opCount].op, op);
+		c[opCount].value = NULL;
+		opCount++;
+	}
 }
 
 void codeGeneration(char *op, int value) {
-	strcpy(c[opCount].op, op);
-	c[opCount].value = value;
-	opCount++; 
+	if(found_error == FALSE) {	
+		strcpy(c[opCount].op, op);
+		c[opCount].value = value;
+		opCount++;
+	}
 }
 
 void printCode() {
 	int i;
 	for(i = 0; i < opCount; i++) {
-		printf("%s %d\n", c[i].op, c[i].value);
+		printf("%s", c[i].op);
+		if(c[i].value != NULL)		
+			printf(" %d\n", c[i].value);
+		else
+			printf("\n");
 	}
 }
 

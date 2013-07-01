@@ -22,7 +22,9 @@ int main(void)
 	init_wk_table(wk_table);
 	sym_table = hmap_init(MAP_SIZE, ID_SIZE*sizeof(char), sizeof(struct symbol), hash);
 	undeclared_vars = squeue_init(100, sizeof(struct symbol));
+	codeInit();	
 	yyparse();
+	printCode();
 	hmap_free(wk_table);
 	hmap_free(sym_table);
 	squeue_free(undeclared_vars);
