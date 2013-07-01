@@ -1,5 +1,5 @@
 CC=gcc
-CCFLAGS=-std=c99 -Os -Wall -Wextra -pedantic
+CCFLAGS=-std=c99 -Wall -Wextra -pedantic
 CLFLAGS=
 
 all: hmap.o parser.tab.o lexer.tab.o cgt.o

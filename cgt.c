@@ -8,7 +8,9 @@
 
 struct hmap *wk_table;
 struct hmap *sym_table;
+unsigned mem_position=0;
 unsigned current_line=1;
+bool is_global_ctx=TRUE;
 
 
 int main(void)

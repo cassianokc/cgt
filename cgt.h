@@ -9,7 +9,8 @@
 struct symbol
 {
 	unsigned type;
-	unsigned context;
+	unsigned position;
+	bool context;
 };
 
 #define TYPE_INT 1

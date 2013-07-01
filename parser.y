@@ -1,4 +1,4 @@
-%{
+	%{
 	// Includes selecionados para o arquivo C
 	#include <stdio.h>
 	#include "common.h"
@@ -13,9 +13,7 @@
 	} OP;
 
 	struct val
-{
-	unsigned context;
-	unsigned type;
+{ unsigned context; unsigned type;
 };
 
 
@@ -175,9 +173,15 @@ KEYWORD_REAL
 variaveis:
 VAL_STRING mais_var
 {
-	$$.type = $1.type;
-	$2.type = $1.type;
-	
+	struct symbol sym;
+	if (hmap_search(sym_table, $1.val, &sym) == SUCCESS)
+	{
+		printf("Semantic error at line %u: Identifier %s has already been declared.\n", current_line, $1.val);
+	}
+	sym.type = $$.type;
+	sym.context = is_global_ctx;
+	sym.position = ++mem_position;
+	hmap_insert(sym_table, $1.val, &sym);
 }
 ;
 
@@ -226,7 +230,9 @@ dc_loc KEYWORD_BEGIN comandos KEYWORD_END PUNCTUATOR_SEMICOLON
 
 // <dc_loc> ::= <dc_v>
 dc_loc:
-dc_v
+dc_v {
+	is_global_ctx=FALSE;
+}
 ;
 
 // <lista_arg> ::= ( <argumentos> ) | λ
@@ -237,7 +243,8 @@ PUNCTUATOR_LPAREN argumentos PUNCTUATOR_RPAREN
 
 // <argumentos> ::= ident <mais_ident>
 argumentos:
-VAL_STRING mais_ident
+VAL_STRING mais_ident {
+}
 ;
 
 // <mais_ident> ::= ; <argumentos> | λ
@@ -253,22 +260,22 @@ p_falsa: KEYWORD_ELSE cmd
 
 // <comandos> ::= <cmd> ; <comandos> | λ
 comandos:
-cmd PUNCTUATOR_SEMICOLON comandos
+cmd PUNCTUATOR_SEMICOLON comandos 
 | error PUNCTUATOR_SEMICOLON comandos { yyerrok; printf("and it is not a valid command.\n"); }
 | cmd error comandos { yyerrok; printf("and ';' was expected\n"); }
 |
 ;
 
-// <cmd> ::= read ( <variaveis> ) |
-//		write ( <variaveis> ) |
+// <cmd> ::= read ( <outras_variaveis> ) |
+//		write ( <outras_variaveis> ) |
 //		while ( <condicao> ) do <cmd> |
 //		if <condicao> then <cmd> <pfalsa> |
 //		ident := <expressão> |
 //		ident <lista_arg> |
 //		begin <comandos> end
 cmd:
-KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN { codeGeneration("LEIT", 0); codeGeneration("ARMZ", 0); }
-| KEYWORD_WRITE PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN
+KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGeneration("LEIT", 0); codeGeneration("ARMZ", 0); }
+| KEYWORD_WRITE PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN
 | KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
 | KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
 | VAL_STRING OPERATOR_ATRIB expressao
@@ -276,6 +283,17 @@ KEYWORD_READ PUNCTUATOR_LPAREN variaveis PUNCTUATOR_RPAREN { codeGeneration("LEI
 | KEYWORD_BEGIN comandos KEYWORD_END
 | KEYWORD_REPEAT comandos KEYWORD_UNTIL condicao
 | KEYWORD_FOR VAL_STRING OPERATOR_ATRIB expressao KEYWORD_TO expressao KEYWORD_DO cmd
+;
+
+// <outras_variaveis> ::= ident <outras_mais_var>
+outras_variaveis:
+VAL_STRING outras_mais_var
+;
+
+// <outras_mais_var> ::= , <outras_variaveis> | λ
+outras_mais_var:
+PUNCTUATOR_COMMA outras_variaveis
+|
 ;
 
 // <condicao> ::= <expressao> <relacao> <expressao>
@@ -337,7 +355,14 @@ OPERATOR_MUL
 
 // <fator> ::= ident | <numero> | ( <expressao> )
 fator:
-VAL_STRING
+VAL_STRING {
+	struct symbol sym;
+	if (hmap_search(sym_table, $1.val, &sym) == SUCCESS)
+		printf("Identifier of type %u on context %u with position %u.\n", sym.type, sym.context, sym.position);
+	else
+		printf("Semantic error at line %u: Undeclared identifier %s.\n", current_line, $1.val);
+
+}
 | numero
 | PUNCTUATOR_LPAREN expressao PUNCTUATOR_RPAREN
 ;
