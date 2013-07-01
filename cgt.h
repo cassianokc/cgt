@@ -10,14 +10,15 @@ struct symbol
 {
 	unsigned type;
 	unsigned position;
-	bool context;
+	unsigned context;
 	char key[ID_SIZE];
 };
+
 
 #define TYPE_ALL 0
 #define TYPE_INT 1
 #define TYPE_FLOAT 2
-#define TYPE_PROCEDURE 3
+
 
 unsigned long hash(const void *a);
 void init_wk_table(struct hmap *map);

@@ -9,7 +9,8 @@ extern struct hmap *sym_table;
 extern struct squeue *undeclared_vars;
 extern unsigned mem_position;
 extern unsigned current_line;
-extern bool is_global_ctx;
+extern unsigned current_context;
+extern bool found_error;
 
 
 #endif

@@ -12,8 +12,8 @@ struct hmap *sym_table;
 struct squeue *undeclared_vars;
 unsigned mem_position=0;
 unsigned current_line=1;
-bool is_global_ctx=TRUE;
-
+unsigned current_context=0;
+bool found_error=FALSE;
 
 int main(void)
 {

@@ -1,11 +1,11 @@
-	%{
+%{
 	// Includes selecionados para o arquivo C
-	#include <stdio.h>
-	#include "common.h"
-	#include "extern.h"
-	#include "cgt.h"
-	#include "hmap.h" 
-	#include "lexer.tab.h"
+#include <stdio.h>
+#include "common.h"
+#include "extern.h"
+#include "cgt.h"
+#include "hmap.h" 
+#include "lexer.tab.h"
 
 	typedef struct {
 		char op[5];
@@ -13,11 +13,10 @@
 	} OP;
 
 	struct val
-{ unsigned context; unsigned type;
-};
+	{ unsigned context; unsigned type; };
 
 
-	
+
 	FILE *f;
 	OP c[1024];
 	int opCount;
@@ -30,10 +29,10 @@
 	void openFile();
 	void closeFile();
 	int hmap_insert(struct hmap *map, void *key, void *data);
-%}
+	%}
 
-// Union com os possiveis tipos para as variaveis, integer, real e string
-%union YYSTYPE {
+	// Union com os possiveis tipos para as variaveis, integer, real e string
+	%union YYSTYPE {
 		struct val_integer
 		{
 			unsigned context;
@@ -57,7 +56,7 @@
 			unsigned type;
 		} val_info;
 
-}
+	}
 
 // Tokens obtidas no analisador lexico, que serao utilizados nas regras da gramatica
 // Identificadores
@@ -158,7 +157,7 @@ KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c { codeG
 dc_v:
 KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v 
 {
-		
+
 }
 | KEYWORD_VAR variaveis error tipo_var PUNCTUATOR_SEMICOLON dc_v { yyerrok; printf("and ':' was expected.\n"); }
 | KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var error dc_v { yyerrok; printf("and ';' was expected.\n"); }
@@ -175,7 +174,7 @@ KEYWORD_REAL
 		squeue_remove(undeclared_vars, &sym);
 		sym.type = TYPE_FLOAT;
 		hmap_update(sym_table, sym.key, &sym);
-	
+
 	}
 }
 | KEYWORD_INTEGER
@@ -200,10 +199,11 @@ VAL_STRING mais_var
 	if (hmap_search(sym_table, $1.val, &sym) == SUCCESS)
 	{
 		printf("Semantic error at line %u: Identifier %s has already been declared.\n", current_line, $1.val);
+		found_error=TRUE;
 	}
 	else 
 	{
-		sym.context = is_global_ctx;
+		sym.context = current_context;
 		sym.position = ++mem_position;
 		strcpy(sym.key, $1.val);
 		squeue_insert(undeclared_vars, &sym);
@@ -216,18 +216,25 @@ VAL_STRING mais_var
 mais_var:
 PUNCTUATOR_COMMA variaveis
 {
-	
+
 }
 |
 ;
 
 // <dc_p> ::= procedure ident <parametros> ; <corpo_p> <dc_p> | λ
 dc_p :
-KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p dc_p
+controle_contexto KEYWORD_PROCEDURE VAL_STRING parametros PUNCTUATOR_SEMICOLON corpo_p dc_p
 {
-	$$.type = $2.type;
+	$$.type = $3.type;
+	current_context=0;
 }
 |
+;
+
+controle_contexto:
+{
+	current_context++;
+}
 ;
 
 // <parametros> ::= ( <lista_par> ) | λ
@@ -258,7 +265,6 @@ dc_loc KEYWORD_BEGIN comandos KEYWORD_END PUNCTUATOR_SEMICOLON
 // <dc_loc> ::= <dc_v>
 dc_loc:
 dc_v {
-	is_global_ctx=FALSE;
 }
 ;
 
@@ -311,11 +317,19 @@ KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { codeGenerati
 	{
 		printf("Semantic error at line %u: Undeclared identifier %s.\n",
 				current_line, $1.val); 
+		found_error=TRUE;
 	}
 	if (sym.type != $3.type)
 	{
 		printf("Semantic error at line %u: Atribution between different types.\n", current_line);
+		found_error=TRUE;
 	}
+	if (sym.context != 0 && sym.context != current_context)
+	{
+		printf("Semantic error at line %u: Identifier %s used out of context.\n", current_line, sym.key);
+		found_error=TRUE;
+	}
+
 	codeGeneration("ARMZ", 0); 
 }
 | VAL_STRING lista_arg
@@ -329,9 +343,15 @@ outras_variaveis:
 VAL_STRING outras_mais_var {
 	struct symbol sym;
 	hmap_search(sym_table, $1.val, &sym);
+	if (sym.context != 0 && sym.context != current_context)
+	{
+		printf("Semantic error at line %u: Identifier %s used out of context.\n", sym.key);
+		found_error=TRUE;
+	}
 	if (sym.type != $2.type && $2.type != TYPE_ALL)
 	{
 		printf("Semantic error at line %u: Read/Write variables must have the same type.\n", current_line);
+		found_error=TRUE;
 	}
 	$$.type = sym.type;
 }
@@ -354,6 +374,7 @@ expressao relacao expressao {
 	if ($1.type != $3.type)
 	{
 		printf("Semantic error at line %u: Comparison between different types.\n", current_line);
+		found_error=TRUE;
 	}
 }
 ;
@@ -389,6 +410,7 @@ op_ad termo outros_termos {
 	if ($2.type != $3.type&&$3.type!=TYPE_ALL)
 	{
 		printf("Semantic error at line %u: Sum or subtraction between different types.\n", current_line);
+		found_error=TRUE;
 	}
 	$$.type = $2.type;
 }
@@ -416,6 +438,7 @@ op_mul fator mais_fatores {
 	if ($2.type != $3.type&&$3.type!=TYPE_ALL)
 	{
 		printf("Semantic error at line %u: Multiplication or division between different types.\n", current_line);
+		found_error=TRUE;
 	}
 	$$.type = $2.type;
 }
@@ -437,10 +460,16 @@ VAL_STRING {
 	struct symbol sym;
 	if (hmap_search(sym_table, $1.val, &sym) == SUCCESS)
 	{
+		if (sym.context != 0 && sym.context != current_context)
+		{
+			printf("Semantic error at line %u: Identifier %s used out of context.\n", current_line, sym.key);
+			found_error=TRUE;
+		}
 		$$.type = sym.type;
 	}
 	else
 		printf("Semantic error at line %u: Undeclared identifier %s.\n", current_line, $1.val);
+	found_error=TRUE;
 }
 | numero {
 	$$.type = $1.type;
@@ -468,6 +497,7 @@ VAL_INTEGER {
 int yyerror(char *s)
 {
 	printf("Syntatic error at line %u: found '%s' ", current_line, yytext);
+	found_error=TRUE;
 	return 1;
 }
 

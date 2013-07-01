@@ -3,6 +3,21 @@ program id;
 const a = 1;
 var a, a1 : integer;
 var b: real;
+procedure isprime(n:integer);
+var i, rem:integer;
+begin
+i:=0;
+while (i<n) do
+begin
+rem:=i/n;
+end;
+end;
+procedure proc(x: integer);
+var proc_var: integer;
+begin
+read (proc_var);
+write(proc_var, x);
+end;
 begin
 read(a, b); 
 write(b, a, a1);
@@ -16,8 +31,9 @@ a1:= a1-1;
 end; 
 for b:=1 to 10 do 
 begin
+proc_var:= 3;
 b:=a+2.30; 
-a:=a-1; 
+a:=a-1+proc_var; 
 a:=x21-1;
 end; 
 if a <> b then write(a); 
