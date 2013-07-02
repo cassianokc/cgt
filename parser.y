@@ -17,14 +17,17 @@
 
 	FILE *f;
 	OP c[1024];
-	int opCount;
+	int opCount, readFlag, writeFlag, attribFlag, stackedFactors, currentAttribAddress;
+	char currentOperator; //auxMem[1024][1024];
 
 	int yyerror(char *s);
 	void codeInit();
 	void codeGenerationWithoutValue(char *op);
 	void codeGeneration(char *op, int value);
+	void finalizeCode();
 	void printCode();
 	void openFile();
+	void writeFile();
 	void closeFile();
 	int hmap_insert(struct hmap *map, void *key, void *data);
 	%}
@@ -153,7 +156,7 @@ KEYWORD_CONST VAL_STRING OPERATOR_EQUAL numero PUNCTUATOR_SEMICOLON dc_c { codeG
 
 // <dc_v> ::= var <variaveis> : <tipo_var> ; <dc_v> | λ
 dc_v:
-KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v { codeGeneration("ALME", 1); }
+KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var PUNCTUATOR_SEMICOLON dc_v
 | KEYWORD_VAR variaveis error tipo_var PUNCTUATOR_SEMICOLON dc_v { yyerrok; printf("and ':' was expected.\n"); }
 | KEYWORD_VAR variaveis PUNCTUATOR_DDOTS tipo_var error dc_v { yyerrok; printf("and ';' was expected.\n"); }
 |
@@ -200,16 +203,18 @@ VAL_STRING mais_var
 	{
 		sym.context = current_context;
 		sym.position = ++mem_position;
+		//strcpy(auxMem[mem_position], $1.val);
 		strcpy(sym.key, $1.val);
 		squeue_insert(undeclared_vars, &sym);
 		hmap_insert(sym_table, &sym.key, &sym);
+		codeGeneration("ALME", 1);
 	}
 }
 ;
 
 // <mais_var> ::= , <variaveis> | λ
 mais_var:
-PUNCTUATOR_COMMA variaveis { codeGeneration("ALME", 1); }
+PUNCTUATOR_COMMA variaveis { }
 |
 ;
 
@@ -299,8 +304,8 @@ cmd PUNCTUATOR_SEMICOLON comandos
 //		ident <lista_arg> |
 //		begin <comandos> end
 cmd:
-KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { }
-| KEYWORD_WRITE PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN
+KEYWORD_READ { readFlag = TRUE; } PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { if (readFlag == TRUE) readFlag = FALSE; }
+| KEYWORD_WRITE { writeFlag = TRUE; } PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { if (writeFlag == TRUE) writeFlag = FALSE; }
 | KEYWORD_WHILE PUNCTUATOR_LPAREN condicao PUNCTUATOR_RPAREN KEYWORD_DO cmd
 | KEYWORD_IF condicao KEYWORD_THEN cmd p_falsa
 | VAL_STRING OPERATOR_ATRIB expressao { 
@@ -331,7 +336,7 @@ KEYWORD_READ PUNCTUATOR_LPAREN outras_variaveis PUNCTUATOR_RPAREN { }
 outras_variaveis:
 VAL_STRING outras_mais_var {
 	struct symbol sym;
-	hmap_search(sym_table, $1.val, &sym);
+	int result = hmap_search(sym_table, $1.val, &sym);
 	if (sym.context != 0 && sym.context != current_context)
 	{
 		printf("Semantic error at line %u: Identifier %s used out of context.\n", sym.key);
@@ -343,6 +348,14 @@ VAL_STRING outras_mais_var {
 		found_error=TRUE;
 	}
 	$$.type = sym.type;
+	
+	if (readFlag == TRUE) {
+		codeGenerationWithoutValue("LEIT");
+		codeGeneration("ARMZ", sym.position);
+	} else if (writeFlag == TRUE) {
+		codeGeneration("CRVL", sym.position);
+		codeGenerationWithoutValue("IMPR");
+	}
 }
 ;
 
@@ -410,8 +423,8 @@ op_ad termo outros_termos {
 
 // <op_ad> ::= + | -
 op_ad:
-OPERATOR_PLUS
-| OPERATOR_MINUS
+OPERATOR_PLUS { currentOperator = '+'; }
+| OPERATOR_MINUS { currentOperator = '-'; }
 ;
 
 // <termo> ::= <op_un> <fator> <mais_fatores>
@@ -439,8 +452,8 @@ op_mul fator mais_fatores {
 
 // <op_mul> ::= * | /
 op_mul:
-OPERATOR_MUL
-| OPERATOR_DIV
+OPERATOR_MUL { currentOperator = '*'; }
+| OPERATOR_DIV { currentOperator = '/'; }
 ;
 
 // <fator> ::= ident | <numero> | ( <expressao> )
@@ -492,7 +505,8 @@ int yyerror(char *s)
 }
 
 void codeInit() {
-	opCount = 0;
+	opCount = stackedFactors = 0;
+	readFlag = writeFlag = attribFlag = TRUE;
 	codeGenerationWithoutValue("INPP");
 }
 
@@ -512,8 +526,23 @@ void codeGeneration(char *op, int value) {
 	}
 }
 
+void finalizeCode() {
+	codeGenerationWithoutValue("PARA");
+	printCode();
+	if(found_error == FALSE) {
+		openFile();
+		writeFile();
+		closeFile();
+	} else {
+		remove("code.txt");
+	}
+}
+
 void printCode() {
 	int i;
+	/*for(i = 1; i <= mem_position; i++) {
+		printf("-- %d -- %s\n", i, auxMem[i]);
+	}*/
 	for(i = 0; i < opCount; i++) {
 		printf("%s", c[i].op);
 		if(c[i].value != NULL)		
@@ -525,6 +554,17 @@ void printCode() {
 
 void openFile() {
 	f = fopen("code.txt","w");
+}
+
+void writeFile() {
+	int i;
+	for(i = 0; i < opCount; i++) {
+		fprintf(f, "%s", c[i].op);
+		if(c[i].value != NULL)
+			fprintf(f, " %d\n", c[i].value);
+		else
+			fprintf(f, "\n");
+	}
 }
 
 void closeFile() {

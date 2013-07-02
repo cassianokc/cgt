@@ -24,7 +24,7 @@ int main(void)
 	undeclared_vars = squeue_init(100, sizeof(struct symbol));
 	codeInit();	
 	yyparse();
-	printCode();
+	finalizeCode();
 	hmap_free(wk_table);
 	hmap_free(sym_table);
 	squeue_free(undeclared_vars);
